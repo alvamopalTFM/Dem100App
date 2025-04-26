@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "179104331634",
+    "project_id": "dem100app",
+    "storage_bucket": "dem100app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:179104331634:android:c9b1bab492b51a1fed8feb",
+        "android_client_info": {
+          "package_name": "com.example.dem100app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdrKpd0sQI05NODSOh0VzITNkDeY6MHmU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
