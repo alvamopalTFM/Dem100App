@@ -30,7 +30,7 @@ class _TestNBackPageState extends State<TestNBackPage> {
                   highlightedIndex = (highlightedIndex + 1) % 9; // Modo prueba
                 });
               },
-              child: const Text('Siguiente estímulo'),
+              child: const Text('Siguiente estimulo'),
             ),
           ],
         ),
