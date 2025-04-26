@@ -14,7 +14,7 @@ class _TestNBackPageState extends State<TestNBackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Test de N-Back'),
+        title: const Text('N-Back'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
