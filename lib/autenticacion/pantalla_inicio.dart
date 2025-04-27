@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dem100app/auth.dart';
 import 'package:dem100app/minijuegos/test_stroop.dart';
-import 'package:dem100app/minijuegos/n-back.dart';
+import 'package:dem100app/minijuegos/n_back.dart';
 
 class PantallaInicio extends StatelessWidget {
   PantallaInicio({Key? key}) : super(key: key);
