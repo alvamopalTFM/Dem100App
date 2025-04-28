@@ -1,8 +1,11 @@
+import 'package:dem100app/minijuegos/laberinto.dart';
+import 'package:dem100app/minijuegos/secuencia_acciones.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dem100app/auth.dart';
 import 'package:dem100app/minijuegos/test_stroop.dart';
 import 'package:dem100app/minijuegos/n_back.dart';
+import 'package:dem100app/minijuegos/laberinto.dart';
 
 class PantallaInicio extends StatelessWidget {
   PantallaInicio({Key? key}) : super(key: key);
@@ -52,6 +55,31 @@ class PantallaInicio extends StatelessWidget {
     );
   }
 
+    Widget laberintoButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LaberintoPage()),
+        );
+      },
+      child: const Text('Laberinto'),
+    );
+  }
+
+  Widget accionesButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SecuenciaAccionesPage()),
+        );
+      },
+      child: const Text('Secuencia de acciones'),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +101,10 @@ class PantallaInicio extends StatelessWidget {
             _signOutButton(),
             const SizedBox(height: 20),
             _nBackButton(context),
+            const SizedBox(height: 20),
+            laberintoButton(context),
+            const SizedBox(height: 20),
+            accionesButton(context),
           ],
         ),
       ),
