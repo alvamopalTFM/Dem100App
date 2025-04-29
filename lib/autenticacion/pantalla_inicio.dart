@@ -6,6 +6,7 @@ import 'package:dem100app/auth.dart';
 import 'package:dem100app/minijuegos/test_stroop.dart';
 import 'package:dem100app/minijuegos/n_back.dart';
 import 'package:dem100app/minijuegos/laberinto.dart';
+import 'package:dem100app/minijuegos/memoria_secuencial.dart';
 
 class PantallaInicio extends StatelessWidget {
   PantallaInicio({Key? key}) : super(key: key);
@@ -79,6 +80,18 @@ class PantallaInicio extends StatelessWidget {
     );
   }
 
+  Widget memoriaButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MemoriaSecuencialPage()),
+        );
+      },
+      child: const Text('Memoria secuencial'),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +118,8 @@ class PantallaInicio extends StatelessWidget {
             laberintoButton(context),
             const SizedBox(height: 20),
             accionesButton(context),
+            const SizedBox(height: 20),
+            memoriaButton(context),
           ],
         ),
       ),
