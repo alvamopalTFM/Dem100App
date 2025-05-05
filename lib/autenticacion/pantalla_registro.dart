@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dem100app/auth.dart';
 
-class PantallaRegistro extends StatefulWidget{
+class PantallaRegistro extends StatefulWidget {
   const PantallaRegistro({Key? key}) : super(key: key);
 
   @override
-  State<PantallaRegistro> createState() => PantallaRegistroState();
+  State<PantallaRegistro> createState() => _PantallaRegistroState();
 }
 
-class PantallaRegistroState extends State<PantallaRegistro>{
-
+class _PantallaRegistroState extends State<PantallaRegistro> {
   String? errorMessage = '';
   bool isLogin = true;
 
@@ -20,7 +19,7 @@ class PantallaRegistroState extends State<PantallaRegistro>{
   Future<void> signInWithEmailAndPassword() async {
     try {
       await Auth().signInWithEmailAndPassword(
-        email: _controllerEmail.text, 
+        email: _controllerEmail.text,
         password: _controllerPassword.text,
       );
     } on FirebaseAuthException catch (e) {
@@ -30,10 +29,10 @@ class PantallaRegistroState extends State<PantallaRegistro>{
     }
   }
 
-  Future<void> createUserWithEmailAndPassword() async{
+  Future<void> createUserWithEmailAndPassword() async {
     try {
       await Auth().createUserWithEmailAndPassword(
-        email: _controllerEmail.text, 
+        email: _controllerEmail.text,
         password: _controllerPassword.text,
       );
     } on FirebaseAuthException catch (e) {
@@ -43,65 +42,107 @@ class PantallaRegistroState extends State<PantallaRegistro>{
     }
   }
 
-  Widget _title(){
-    return const Text('Firebase Auth');
-  }
-
-  Widget _entryField(
-    String title,
-    TextEditingController controller,
-  ) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: title,
+  Widget _entryField(String label, TextEditingController controller, {bool obscure = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.blue[50],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.lightBlue),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.blue),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _errorMessage(){
-    return Text(errorMessage == '' ? '' : 'Humm $errorMessage');
-  }
-
-  Widget _submitButton(){
-    return ElevatedButton(
-      onPressed: isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword, 
-      child: Text(isLogin ? 'Login' : 'Register'),
+  Widget _errorMessage() {
+    if (errorMessage == '') return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(
+        errorMessage ?? '',
+        style: const TextStyle(color: Colors.red, fontSize: 14),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 
-  Widget _loginOrRegisterButton(){
+  Widget _submitButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: Colors.lightBlueAccent,
+      ),
+      onPressed: isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword,
+      child: Text(
+        isLogin ? 'Iniciar sesión' : 'Registrarse',
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _loginOrRegisterButton() {
     return TextButton(
       onPressed: () {
         setState(() {
           isLogin = !isLogin;
+          errorMessage = '';
         });
-      }, 
-      child: Text(isLogin ? 'Register instead' : 'Login instead'),
+      },
+      child: Text(
+        isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión',
+        style: const TextStyle(fontSize: 14, color: Colors.blue),
+      ),
     );
   }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: _title(),
-      ),
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _entryField('email', _controllerEmail),
-            _entryField('password', _controllerPassword),
-            _errorMessage(),
-            _submitButton(),
-            _loginOrRegisterButton(),
-          ],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 60),
+
+              // Logo
+              SizedBox(
+                height: 260,
+                child: Image.asset('assets/imagenes/logo.png'),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Campos de entrada
+              _entryField('Correo electrónico', _controllerEmail),
+              _entryField('Contraseña', _controllerPassword, obscure: true),
+
+              _errorMessage(),
+              const SizedBox(height: 10),
+
+              _submitButton(),
+              const SizedBox(height: 10),
+              _loginOrRegisterButton(),
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

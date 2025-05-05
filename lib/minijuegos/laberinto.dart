@@ -52,8 +52,8 @@ class _LaberintoPageState extends State<LaberintoPage> {
       builder: (context) => AlertDialog(
         title: const Text('Instrucciones'),
         content: const Text(
-          'Llega a la meta (casilla roja) moviéndote una casilla cada vez.\n\n'
-          'Pulsa las flechas para moverte.\n'
+          'Mueve el cuadrado azul hasta la meta (el cuadrado rojo).\n\n'
+          'Pulsa las flechas debajo para moverte.\n'
           'Si chocas contra una pared, cuenta como error.\n\n'
           '¡Selecciona la dificultad cuando pulses OK!',
           style: TextStyle(fontSize: 16),
