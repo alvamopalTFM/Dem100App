@@ -27,30 +27,45 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
   String categoriaCorrecta = '';
   String? ultimaPalabraMostrada;
 
-  final List<String> categorias = ['Animales', 'Frutas', 'Vehículos'];
-
-  final Map<String, String> palabras = {
-    'Perro': 'Animales',
-    'Gato': 'Animales',
-    'León': 'Animales',
-    'Manzana': 'Frutas',
-    'Banana': 'Frutas',
-    'Uva': 'Frutas',
-    'Coche': 'Vehículos',
-    'Camión': 'Vehículos',
-    'Moto': 'Vehículos',
-  };
-
   final Random random = Random();
 
   bool juegoIniciado = false;
+
+  // Todas las categorías posibles
+  final Map<String, List<String>> todasLasCategorias = {
+    'Animales': ['Perro', 'Gato', 'León', 'Elefante', 'Tigre', 'Salmón', 'Paloma', 'Gorila'],
+    'Frutas': ['Manzana', 'Plátano', 'Uva', 'Naranja', 'Fresa', 'Limón', 'Pera', 'Piña', 'Melón', 'Sandía'],
+    'Vehículos': ['Coche', 'Camión', 'Moto', 'Avión', 'Helicoptero', 'Tractor', 'Barco'],
+    'Ropa': ['Camiseta', 'Pantalón', 'Zapato', 'Abrigo', 'Sombrero', 'Chaqueta', 'Calcetines'],
+    'Herramientas': ['Martillo', 'Destornillador', 'Taladro', 'Llave inglesa', 'Alicate', 'Sierra'],
+    'Colores': ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Morado', 'Negro', 'Blanco', 'Naranja'],
+  };
+
+  List<String> categoriasSeleccionadas = [];
+  Map<String, String> palabrasFiltradas = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _seleccionarCategorias();
       _mostrarInstrucciones();
     });
+  }
+
+  void _seleccionarCategorias() {
+    final todas = todasLasCategorias.keys.toList();
+    todas.shuffle();
+    categoriasSeleccionadas = todas.take(3).toList();
+
+    palabrasFiltradas = {};
+    for (var categoria in categoriasSeleccionadas) {
+      for (var palabra in todasLasCategorias[categoria]!) {
+        palabrasFiltradas[palabra] = categoria;
+      }
+    }
+
+    setState(() {}); // Actualiza la UI tras la selección
   }
 
   void _mostrarInstrucciones() {
@@ -59,10 +74,12 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('Instrucciones'),
-        content: const Text(
+        content: Text(
           'Clasifica la palabra que aparece tocando la categoría correcta.\n\n'
           'Tienes 60 segundos para clasificar el mayor número posible.\n\n'
+          'Categorías activas:\n- ${categoriasSeleccionadas.join('\n- ')}\n\n'
           '¡Empieza cuando pulses OK!',
+          style: const TextStyle(fontSize: 16),
         ),
         actions: [
           TextButton(
@@ -92,7 +109,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
   }
 
   void _siguientePalabra() {
-    final palabrasKeys = palabras.keys.toList();
+    final palabrasKeys = palabrasFiltradas.keys.toList();
     String nuevaPalabra;
 
     do {
@@ -101,7 +118,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
 
     setState(() {
       palabraActual = nuevaPalabra;
-      categoriaCorrecta = palabras[nuevaPalabra]!;
+      categoriaCorrecta = palabrasFiltradas[nuevaPalabra]!;
       ultimaPalabraMostrada = nuevaPalabra;
     });
   }
@@ -125,6 +142,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
         'email': user.email,
         'aciertos': aciertos,
         'errores': errores,
+        'categorias': categoriasSeleccionadas,
         'timestamp': Timestamp.now(),
       });
     }
@@ -164,42 +182,45 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Tiempo restante: $tiempoRestante s',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 30),
-              Text(
-                palabraActual,
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              Wrap(
-                spacing: 20,
-                runSpacing: 20,
-                alignment: WrapAlignment.center,
-                children: categorias.map((categoria) {
-                  return ElevatedButton(
-                    onPressed: () => _seleccionarCategoria(categoria),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          child: categoriasSeleccionadas.isEmpty
+              ? const CircularProgressIndicator()
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Tiempo restante: $tiempoRestante s',
+                      style: const TextStyle(fontSize: 18),
                     ),
-                    child: Text(categoria, style: const TextStyle(fontSize: 18)),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Aciertos: $aciertos    Errores: $errores',
-                style: const TextStyle(fontSize: 18),
-              ),
-            ],
-          ),
+                    const SizedBox(height: 30),
+                    Text(
+                      palabraActual,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 30),
+                    Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      alignment: WrapAlignment.center,
+                      children: categoriasSeleccionadas.map((categoria) {
+                        return ElevatedButton(
+                          onPressed: () => _seleccionarCategoria(categoria),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          ),
+                          child: Text(categoria, style: const TextStyle(fontSize: 18)),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 40),
+                    Text(
+                      'Aciertos: $aciertos    Errores: $errores',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
   }
 }
+

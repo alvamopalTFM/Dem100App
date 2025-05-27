@@ -37,12 +37,12 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
     {
       'objetivo': 'Prepara una comida',
       'correctas': ['Ir a la cocina', 'Encender la cocina', 'Cocinar los alimentos'],
-      'distractoras': ['Sacar la basura', 'Leer un libro', 'Tocar la guitarra'],
+      'distractoras': ['Encender la tele', 'Leer un libro', 'Tocar la guitarra'],
     },
     {
       'objetivo': 'Arranca el coche',
       'correctas': ['Coger las llaves', 'Entrar en el coche', 'Girar la llave en el contacto'],
-      'distractoras': ['Cambiar una rueda', 'Abrir el maletero', 'Limpiar el parabrisas'],
+      'distractoras': ['Cambiar una rueda', 'Abrir el maletero', 'Tocar el claxon'],
     },
     {
       'objetivo': 'Hacer un cafe',
@@ -56,23 +56,23 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
     },
     {
       'objetivo': 'Cambiar una bombilla',
-      'correctas': ['Apagar la luz', 'Quitar la bombilla vieja', 'Poner la bombilla nueva'],
-      'distractoras': ['Cambiar el interruptor', 'Limpiar la lampara', 'Buscar un martillo'],
+      'correctas': ['Quitar la bombilla vieja', 'Poner la bombilla nueva', 'Encender la luz'],
+      'distractoras': ['Salir de casa', 'Ir al baño', 'Buscar un martillo'],
     },
     {
       'objetivo': 'Leer un libro en la cama',
       'correctas': ['Encender la luz', 'Buscar el libro', 'Acostarse'],
-      'distractoras': ['Abrir la ventana', 'Hacer la cama', 'Coger comida'],
+      'distractoras': ['Abrir la ventana', 'Coger el telefono', 'Coger comida'],
     },
     {
       'objetivo': 'Lavarse los dientes',
       'correctas': ['Poner pasta en el cepillo', 'Cepillarse los dientes', 'Enjuagarse la boca'],
-      'distractoras': ['Limpiar el lavabo', 'Cambiar el cepillo', 'Aplicar crema facial'],
+      'distractoras': ['Ir a la cocina', 'Darse una ducha', 'Aplicar crema facial'],
     },
     {
       'objetivo': 'Lavar la ropa',
       'correctas': ['Meter la ropa en la lavadora', 'Poner detergente', 'Encender la lavadora'],
-      'distractoras': ['Comprar suavizante', 'Encender la secadora', 'Lavarse las manos'],
+      'distractoras': ['Pasar el aspirador', 'Encender la secadora', 'Lavarse las manos'],
     },
   ];
 
@@ -197,21 +197,28 @@ void seleccionarAccion(String accion) {
       );
     } else {
       if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text('¡Secuencia incorrecta!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Intentarlo de nuevo'),
-            ),
-          ],
-        ),
-      );
+showDialog(
+  context: context,
+  barrierDismissible: false,
+  builder: (context) => AlertDialog(
+    title: const Text('¡Secuencia incorrecta!'),
+    content: const Text('Inténtalo de nuevo.'),
+    actions: [
+      TextButton(
+        onPressed: () {
+          setState(() {
+            // Mover las seleccionadas de nuevo a disponibles
+            accionesDisponibles.addAll(accionesSeleccionadas);
+            accionesSeleccionadas.clear();
+          });
+          Navigator.of(context).pop();
+        },
+        child: const Text('Intentarlo de nuevo'),
+      ),
+    ],
+  ),
+);
+
     }
   }
 

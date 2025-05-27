@@ -7,6 +7,9 @@ import 'package:dem100app/minijuegos/test_stroop.dart';
 import 'package:dem100app/minijuegos/n_back.dart';
 import 'package:dem100app/minijuegos/memoria_secuencial.dart';
 import 'package:dem100app/minijuegos/categorizacion_rapida.dart';
+import 'package:dem100app/machine_learning/mostrar_resultado.dart';
+import 'package:dem100app/machine_learning/verificar_juegos.dart';
+
 
 class PantallaInicio extends StatelessWidget {
   PantallaInicio({Key? key}) : super(key: key);
@@ -21,6 +24,14 @@ class PantallaInicio extends StatelessWidget {
     return ElevatedButton(
       onPressed: signOut,
       child: const Text('Cerrar Sesión'),
+    );
+  }
+
+  Widget _resultadoMLButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => verificarYMostrarResultado(context),
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+      child: const Text('Ver resultado cognitivo'),
     );
   }
 
@@ -74,6 +85,7 @@ class PantallaInicio extends StatelessWidget {
                   buildGameButton(context, 'categorizacion.png', 'Categorización', const CategorizacionRapidaPage()),
                 ],
               ),
+              _resultadoMLButton(context),
               const SizedBox(height: 10),
               _signOutButton(),
             ],

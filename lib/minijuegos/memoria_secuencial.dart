@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/components.dart';
@@ -87,16 +86,25 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final Random random = Random();
-  List<Color> colores = [Colors.red, Colors.green, Colors.blue, Colors.yellow];
-  final List<int> secuencia = [];
+  List<Color> colores = [
+    Colors.red,
+    Colors.green,
+    Colors.blue,
+    Colors.yellow,
+    Colors.white, // Inicialmente inactivos
+    Colors.white
+  ];
 
+  final List<int> secuencia = [];
   late List<ColorButton> botones;
+
   int nivel = 1;
-  int _highlightedIndex = -1;
   int _currentRespuestaIndex = 0;
   bool mostrandoSecuencia = false;
   bool puedeResponder = false;
   bool nuevosColoresAgregados = false;
+
+  late TextComponent estadoTexto;
 
   MemoriaSecuencialGame({required this.onGameEnd});
 
@@ -104,6 +112,20 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   Future<void> onLoad() async {
     await super.onLoad();
     _crearBotones();
+
+    estadoTexto = TextComponent(
+      text: 'Mostrando la secuencia',
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      position: Vector2(size.x / 2, 10),
+      anchor: Anchor.topCenter,
+    );
+    add(estadoTexto);
   }
 
   @override
@@ -113,39 +135,38 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
     super.render(canvas);
   }
 
-void _crearBotones() {
-  buttonsClear();
-  botones = [];
-  const int cols = 2;
-  final int rows = (colores.length / cols).ceil();
+  void _crearBotones() {
+    botonesClear();
+    botones = [];
+    const int cols = 2;
+    final double spacing = 20;
+    final double sizeX = 165;
+    final double sizeY = 180;
 
-  final double spacing = 20;
-  final double sizeX = (size.x - (cols + 1) * spacing) / cols;
-  final double sizeY = (size.y - (rows + 1) * spacing) / rows;
+    for (int i = 0; i < colores.length; i++) {
+      int col = i % cols;
+      int row = i ~/ cols;
 
-  for (int i = 0; i < colores.length; i++) {
-    int col = i % cols;
-    int row = i ~/ cols;
+      final pos = Vector2(
+        spacing + col * (sizeX + spacing),
+        40 + spacing + row * (sizeY + spacing),
+      );
 
-    final position = Vector2(
-      spacing + col * (sizeX + spacing),
-      spacing + row * (sizeY + spacing),
-    );
+      final boton = ColorButton(
+        index: i,
+        color: colores[i],
+        position: pos,
+        size: Vector2(sizeX, sizeY),
+        onPressed: _seleccionarColor,
+        activo: i < 4 || nuevosColoresAgregados,
+      );
 
-    final boton = ColorButton(
-      index: i,
-      color: colores[i],
-      position: position,
-      size: Vector2(sizeX, sizeY),
-      onPressed: _seleccionarColor,
-    );
-
-    add(boton);
-    botones.add(boton);
+      add(boton);
+      botones.add(boton);
+    }
   }
-}
 
-  void buttonsClear() {
+  void botonesClear() {
     children.whereType<ColorButton>().forEach((b) => b.removeFromParent());
   }
 
@@ -165,34 +186,40 @@ void _crearBotones() {
     _agregarNuevoColor();
     mostrandoSecuencia = true;
     puedeResponder = false;
+    estadoTexto.text = 'Mostrando la secuencia';
     _mostrarSecuencia();
   }
 
   void _agregarNuevoColor() {
+    int limite = nuevosColoresAgregados ? colores.length : 4;
+
     int nuevoColor;
     do {
-      nuevoColor = random.nextInt(colores.length);
+      nuevoColor = random.nextInt(limite);
     } while (
       secuencia.length >= 2 &&
       nuevoColor == secuencia[secuencia.length - 1] &&
       nuevoColor == secuencia[secuencia.length - 2]
     );
+
     secuencia.add(nuevoColor);
   }
 
   Future<void> _mostrarSecuencia() async {
     await Future.delayed(const Duration(milliseconds: 500));
     for (var index in secuencia) {
+      if (index >= botones.length) continue;
       await Future.delayed(const Duration(milliseconds: 300));
       botones[index].startPulse();
       await Future.delayed(const Duration(milliseconds: 600));
     }
     mostrandoSecuencia = false;
     puedeResponder = true;
+    estadoTexto.text = 'Repite la secuencia';
   }
 
   void _seleccionarColor(int index) {
-    if (!puedeResponder) return;
+    if (!puedeResponder || !botones[index].activo) return;
 
     botones[index].startPulse();
 
@@ -238,7 +265,8 @@ void _crearBotones() {
           TextButton(
             onPressed: () {
               Navigator.of(buildContext!).pop();
-              colores.addAll([Colors.orange, Colors.purple]);
+              colores[4] = Colors.orange;
+              colores[5] = Colors.purple;
               _crearBotones();
               _empezarNuevoNivel();
             },
@@ -254,6 +282,8 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
   final int index;
   final Color color;
   final Function(int) onPressed;
+  final bool activo;
+
   bool _isPulsing = false;
   double _pulseTime = 0;
 
@@ -263,6 +293,7 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
     required Vector2 position,
     required Vector2 size,
     required this.onPressed,
+    required this.activo,
   }) {
     this.position = position;
     this.size = size;
@@ -310,6 +341,7 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
     onPressed(index);
   }
 }
+
 
 
 

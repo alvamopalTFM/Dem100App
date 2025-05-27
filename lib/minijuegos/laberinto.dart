@@ -54,7 +54,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
         content: const Text(
           'Mueve el cuadrado azul hasta la meta (el cuadrado rojo).\n\n'
           'Pulsa las flechas debajo para moverte.\n'
-          'Si chocas contra una pared, cuenta como error.\n\n'
+          'Los bloques negros son paredes. Si chocas contra una, cuenta como error.\n\n'
           '¡Selecciona la dificultad cuando pulses OK!',
           style: TextStyle(fontSize: 16),
         ),
@@ -327,7 +327,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
           color = Colors.black;
           break;
         case 2:
-          color = Colors.green;
+          color = Colors.white;
           break;
         case 3:
           color = Colors.red;
