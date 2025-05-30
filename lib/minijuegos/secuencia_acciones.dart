@@ -4,6 +4,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:dem100app/machine_learning/api_ml.dart';
+
 
 class SecuenciaAccionesPage extends StatefulWidget {
   const SecuenciaAccionesPage({Key? key}) : super(key: key);
@@ -171,6 +174,7 @@ void seleccionarAccion(String accion) {
           'tiempo_segundos': stopwatch.elapsed.inSeconds,
           'timestamp': Timestamp.now(),
         });
+        await lanzarEvaluacionML();
       }
 
       if (!mounted) return;

@@ -1,1 +1,35 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"dem100app","appId":"1:179104331634:android:c9b1bab492b51a1fed8feb","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"dem100app","configurations":{"android":"1:179104331634:android:c9b1bab492b51a1fed8feb","ios":"1:179104331634:ios:0705dfc3e5398395ed8feb"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "dem100app",
+          "appId": "1:179104331634:android:c9b1bab492b51a1fed8feb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "dem100app",
+          "configurations": {
+            "android": "1:179104331634:android:c9b1bab492b51a1fed8feb",
+            "ios": "1:179104331634:ios:0705dfc3e5398395ed8feb"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

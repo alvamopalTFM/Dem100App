@@ -6,6 +6,9 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:dem100app/machine_learning/api_ml.dart';
+
 
 class MemoriaSecuencialPage extends StatefulWidget {
   const MemoriaSecuencialPage({Key? key}) : super(key: key);
@@ -247,6 +250,7 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
         'nivel_alcanzado': nivel - 1,
         'timestamp': Timestamp.now(),
       });
+      await lanzarEvaluacionML();
     }
   }
 

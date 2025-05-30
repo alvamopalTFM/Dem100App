@@ -6,6 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:dem100app/machine_learning/api_ml.dart';
+
 
 class TestNBackPage extends StatefulWidget {
   const TestNBackPage({Key? key}) : super(key: key);
@@ -263,6 +266,7 @@ class NBackGame extends FlameGame {
         'nBack': nBack,
         'timestamp': Timestamp.now(),
       });
+      await lanzarEvaluacionML();
     }
 
     onGameEnd({

@@ -5,6 +5,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:dem100app/machine_learning/api_ml.dart';
+
 
 class LaberintoPage extends StatefulWidget {
   const LaberintoPage({Key? key}) : super(key: key);
@@ -286,6 +289,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
         'cols': cols,
         'timestamp': Timestamp.now(),
       });
+      await lanzarEvaluacionML();
     }
 
     if (mounted) {
