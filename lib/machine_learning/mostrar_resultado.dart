@@ -13,49 +13,58 @@ Future<void> mostrarResultadoML(BuildContext context) async {
     final datos = doc.data();
     if (datos != null && datos.containsKey('resultado_ml')) {
       final resultado = datos['resultado_ml'];
-      final double score = (resultado['anomaly_score'] as num).toDouble();
-      final bool esAnomalo = resultado['es_anomalo'] == true;
+      final int etiqueta = resultado['etiqueta'] ?? -1;
 
-      if (esAnomalo) {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('⚠️ Posible patrón anómalo'),
-            content: Text(
-              'Se ha detectado un comportamiento fuera del patrón normal.\n\n'
-              'Puntaje de anomalía: ${score.toStringAsFixed(3)}',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Aceptar'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('✅ Evaluación normal'),
-            content: Text(
-              'No se ha detectado ningún patrón anómalo en tu rendimiento.\n\n'
-              'Puntaje: ${score.toStringAsFixed(3)}',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Ok'),
-              ),
-            ],
-          ),
-        );
+      String titulo;
+      String mensaje;
+      Icon icono;
+
+      switch (etiqueta) {
+        case 0:
+          titulo = '✅ Todo va bien';
+          mensaje = 'Tu rendimiento es adecuado y no presenta problemas.';
+          icono = const Icon(Icons.check_circle, color: Colors.green, size: 48);
+          break;
+        case 1:
+          titulo = '⚠️ Aviso';
+          mensaje = 'Tu rendimiento presenta algunas irregularidades. Intenta mejorar en algunos minijuegos.';
+          icono = const Icon(Icons.warning, color: Colors.orange, size: 48);
+          break;
+        case 2:
+          titulo = '❌ Posible dificultad';
+          mensaje = 'Se ha detectado un rendimiento preocupante. Consulta con un profesional si lo ves necesario.';
+          icono = const Icon(Icons.error, color: Colors.red, size: 48);
+          break;
+        default:
+          titulo = 'Sin datos válidos';
+          mensaje = 'No se pudo obtener una evaluación válida.';
+          icono = const Icon(Icons.info, size: 48);
       }
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Row(
+            children: [
+              icono,
+              const SizedBox(width: 12),
+              Expanded(child: Text(titulo)),
+            ],
+          ),
+          content: Text(mensaje),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
     } else {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Sin datos'),
+          title: const Text('Sin análisis disponible'),
           content: const Text(
               'Aún no se ha generado un análisis para tu cuenta. Juega primero para obtener un resultado.'),
           actions: [

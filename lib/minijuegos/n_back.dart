@@ -182,11 +182,23 @@ class NBackGame extends FlameGame {
     }
   }
 
+  late Set<int> forcedMatchPositions;
+
   void prepareGame() {
     int minMatches = (totalStimuli * 0.1).round();
     int maxMatches = (totalStimuli * 0.4).round();
     matchesPlanned = random.nextInt(maxMatches - minMatches + 1) + minMatches;
+
+    // Elegimos posiciones válidas (a partir de nBack) donde obligaremos coincidencias
+    List<int> possiblePositions = List.generate(
+      totalStimuli - nBack,
+      (i) => i + nBack,
+    );
+
+    possiblePositions.shuffle();
+    forcedMatchPositions = possiblePositions.take(matchesPlanned).toSet();
   }
+
 
   void startTest() {
     prepareGame();
@@ -206,21 +218,18 @@ class NBackGame extends FlameGame {
     int nextIndex;
     bool shouldForceMatch = false;
 
-    if (currentStimuli >= nBack && matchesCreated < matchesPlanned) {
-      double chance = matchesPlanned / totalStimuli;
-      if (random.nextDouble() < chance) {
-        shouldForceMatch = true;
-      }
-    }
+if (forcedMatchPositions.contains(currentStimuli)) {
+  nextIndex = sequence[currentStimuli - nBack];
+  matchesCreated++;
+} else {
+  do {
+    nextIndex = random.nextInt(gridSize * gridSize);
+  } while (
+    (currentStimuli >= nBack && nextIndex == sequence[currentStimuli - nBack]) || 
+    (sequence.isNotEmpty && nextIndex == sequence.last)
+  );
+}
 
-    if (shouldForceMatch && currentStimuli >= nBack) {
-      nextIndex = sequence[currentStimuli - nBack];
-      matchesCreated++;
-    } else {
-      do {
-        nextIndex = random.nextInt(gridSize * gridSize);
-      } while (currentStimuli >= nBack && nextIndex == sequence[currentStimuli - nBack]);
-    }
 
     highlightedIndex = nextIndex;
     sequence.add(highlightedIndex);
