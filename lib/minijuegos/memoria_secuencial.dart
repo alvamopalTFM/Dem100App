@@ -8,6 +8,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 
 class MemoriaSecuencialPage extends StatefulWidget {
@@ -55,9 +56,10 @@ class _MemoriaSecuencialPageState extends State<MemoriaSecuencialPage> {
       builder: (_) => AlertDialog(
         title: const Text('Instrucciones'),
         content: const Text(
-          'Se mostrará una secuencia de colores.\n'
+          'Se mostrará una secuencia de colores y sonidos.\n'
           'Memoriza el orden y repítelo pulsando los colores.\n'
-          'Cada nivel añade un color más.\n'
+          'Cada nivel añade un color a la secuencia.\n'
+          'Al llegar al nivel 7, se añadirán dos nuevos colores en la pantalla.\n'
           '¡Un fallo termina el juego!',
         ),
         actions: [
@@ -94,7 +96,7 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
     Colors.green,
     Colors.blue,
     Colors.yellow,
-    Colors.white, // Inicialmente inactivos
+    Colors.white,
     Colors.white
   ];
 
@@ -263,7 +265,7 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
       builder: (_) => AlertDialog(
         title: const Text('¡Nuevo reto!'),
         content: const Text(
-          '¡Felicidades!\n\nA partir de ahora tendrás dos nuevos colores.\n¡Mucha suerte!',
+          '¡Enhorabuena!\n\nA partir de ahora el juego se complica, tendrás dos nuevos colores.\n¡Mucha suerte!',
         ),
         actions: [
           TextButton(
@@ -283,6 +285,16 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
 }
 
 class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<MemoriaSecuencialGame> {
+  static final AudioPlayer _audioPlayer = AudioPlayer();
+  static final Map<int, String> _notas = {
+    0: 'Do.wav',
+    1: 'Re.wav',
+    2: 'Mi.wav',
+    3: 'Fa.wav',
+    4: 'Sol.wav',
+    5: 'La.wav',
+  };
+
   final int index;
   final Color color;
   final Function(int) onPressed;
@@ -306,6 +318,14 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
   void startPulse() {
     _isPulsing = true;
     _pulseTime = 0;
+    _reproducirNota();
+  }
+
+  Future<void> _reproducirNota() async {
+    final nombreNota = _notas[index];
+    if (nombreNota != null) {
+      await _audioPlayer.play(AssetSource('sonidos/$nombreNota'));
+    }
   }
 
   @override
@@ -345,9 +365,3 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
     onPressed(index);
   }
 }
-
-
-
-
-
-

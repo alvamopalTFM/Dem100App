@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'mostrar_resultado.dart';
 
 Future<void> verificarYMostrarResultado(BuildContext context) async {
@@ -10,7 +9,6 @@ Future<void> verificarYMostrarResultado(BuildContext context) async {
 
   final uid = user.uid;
 
-  // Colecciones que representan los minijuegos
   final List<String> minijuegos = [
     'stroop_tests',
     'nback_tests',
@@ -30,7 +28,7 @@ Future<void> verificarYMostrarResultado(BuildContext context) async {
         .where('uid', isEqualTo: uid)
         .get();
 
-    if (querySnapshot.size < 5) {
+    if (querySnapshot.size < 1) {
       tieneMinimoDeTodo = false;
       break;
     }
@@ -44,7 +42,7 @@ Future<void> verificarYMostrarResultado(BuildContext context) async {
       builder: (_) => AlertDialog(
         title: const Text('Datos insuficientes'),
         content: const Text(
-          'Para mostrar un resultado de análisis cognitivo, debes jugar al menos 5 partidas en cada minijuego.',
+          'Para mostrar un resultado de análisis cognitivo, debes jugar al menos 1 partida en cada minijuego.',
         ),
         actions: [
           TextButton(

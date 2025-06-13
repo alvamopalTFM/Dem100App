@@ -13,11 +13,11 @@ Future<void> lanzarEvaluacionML() async {
     );
 
     if (response.statusCode == 200) {
-      print("✅ ML ejecutado correctamente");
+      print("ML ejecutado correctamente");
     } else {
-      print("❌ Error ML: ${response.statusCode} - ${response.body}");
+      print("Error ML: ${response.statusCode} - ${response.body}");
     }
   } catch (e) {
-    print("❌ Excepción al llamar a la función ML: $e");
+    print("Excepción al llamar a la función ML: $e");
   }
 }

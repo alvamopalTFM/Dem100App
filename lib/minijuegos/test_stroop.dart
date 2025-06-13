@@ -16,7 +16,7 @@ class TestStroopPage extends StatefulWidget {
 class _TestStroopPageState extends State<TestStroopPage> {
   final List<String> colors = [
     'Azul', 'Amarillo', 'Rojo', 'Naranja', 'Verde',
-    'Morado', 'Marrón', 'Negro', 'Gris',
+    'Morado', 'Marrón', 'Negro',
   ];
 
   final Map<String, Color> colorMap = {
@@ -28,7 +28,6 @@ class _TestStroopPageState extends State<TestStroopPage> {
     'Morado': Colors.purple,
     'Marrón': Colors.brown,
     'Negro': Colors.black,
-    'Gris': Colors.grey,
   };
 
   late String currentWord;
@@ -61,9 +60,9 @@ class _TestStroopPageState extends State<TestStroopPage> {
         title: const Text('Instrucciones'),
         content: const Text(
           'En este test, debes pulsar el botón del color en que está escrita la palabra, '
-          'no el significado de la palabra.\n\n'
+          'no el significado de la palabra. El test termina cuando se clasifican 20 palabras.\n\n'
           'Ejemplo: si ves la palabra "Rojo" escrita en color azul, debes pulsar "Azul".',
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 20),
         ),
         actions: [
           TextButton(
@@ -148,14 +147,15 @@ class _TestStroopPageState extends State<TestStroopPage> {
 
   Widget buildColorButton(String colorName) {
     return SizedBox(
-      width: 110,
-      height: 55,
+      width: 172, // Aumentado
+      height: 115, // Aumentado
       child: ElevatedButton(
         onPressed: () => handleAnswer(colorName),
         style: ElevatedButton.styleFrom(
           backgroundColor: colorMap[colorName],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 4,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -164,7 +164,7 @@ class _TestStroopPageState extends State<TestStroopPage> {
             style: TextStyle(
               color: (colorName == 'Amarillo') ? Colors.black : Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 26,
             ),
             textAlign: TextAlign.center,
           ),
@@ -172,6 +172,7 @@ class _TestStroopPageState extends State<TestStroopPage> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

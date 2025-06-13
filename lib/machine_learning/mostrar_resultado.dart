@@ -21,17 +21,17 @@ Future<void> mostrarResultadoML(BuildContext context) async {
 
       switch (etiqueta) {
         case 0:
-          titulo = '✅ Todo va bien';
+          titulo = 'Todo va bien';
           mensaje = 'Tu rendimiento es adecuado y no presenta problemas.';
           icono = const Icon(Icons.check_circle, color: Colors.green, size: 48);
           break;
         case 1:
-          titulo = '⚠️ Aviso';
+          titulo = 'Aviso';
           mensaje = 'Tu rendimiento presenta algunas irregularidades. Intenta mejorar en algunos minijuegos.';
           icono = const Icon(Icons.warning, color: Colors.orange, size: 48);
           break;
         case 2:
-          titulo = '❌ Posible dificultad';
+          titulo = 'Posible dificultad';
           mensaje = 'Se ha detectado un rendimiento preocupante. Consulta con un profesional si lo ves necesario.';
           icono = const Icon(Icons.error, color: Colors.red, size: 48);
           break;

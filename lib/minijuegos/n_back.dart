@@ -1,6 +1,5 @@
 import 'dart:async' as async;
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/components.dart';
@@ -56,27 +55,71 @@ class _TestNBackPageState extends State<TestNBackPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Instrucciones'),
-        content: const Text(
-          'Observa la posición del cuadrado azul.\n\n'
-          'Pulsa "¡Es igual!" cuando la posición sea la misma que hace 2 movimientos (2-Back).\n\n'
-          'Habrá un número variable de coincidencias posibles.\n\n'
-          'El juego termina después de 20 movimientos.',
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _game.startTest();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        int currentPage = 0;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(currentPage == 0 ? 'Instrucciones' : 'Ejemplo visual'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (currentPage == 0) ...[
+                      const Text(
+                        'Observa la posición del cuadrado azul.\n\n'
+                        'Pulsa "¡Es igual!" cuando la posición sea la misma que hace 2 movimientos. Se puede ver un ejemplo antes de comenzar. \n\n'
+                        'Habrá un número variable de coincidencias posibles.\n\n'
+                        'El juego termina después de 20 movimientos.\n',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ] else ...[
+                      Image.asset(
+                        'assets/imagenes/cuadricula.png',
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Esta es la cuadrícula 3x3 usada en el test.\n'
+                        'El cuadrado azul comienza en una posición de la cuadrícula. Cada 2 segundos se mueve a una posición diferente.\n'
+                        'En el caso de la imagen, se debería pulsar "¡Es igual!" si el cuadrado al moverse una vez, vuelve a la posición que se observa y así sucesivamente',
+                        style: TextStyle(fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                if (currentPage == 1)
+                  TextButton(
+                    onPressed: () => setState(() => currentPage = 0),
+                    child: const Text('Atrás'),
+                  ),
+                if (currentPage == 0)
+                  TextButton(
+                    onPressed: () => setState(() => currentPage = 1),
+                    child: const Text('Ver ejemplo'),
+                  ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _game.startTest();
+                  },
+                  child: const Text('Comenzar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
+
+
 
   void handleResponse() {
     setState(() {
@@ -102,6 +145,12 @@ class _TestNBackPageState extends State<TestNBackPage> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor:  const Color.fromARGB(255, 144, 205, 255),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+              textStyle: const TextStyle(fontSize: 24),
+            ),
             onPressed: handleResponse,
             child: const Text('¡Es igual!'),
           ),
@@ -112,14 +161,12 @@ class _TestNBackPageState extends State<TestNBackPage> {
   }
 }
 
-// ---- Juego de N-Back usando Flame ----
-
 class NBackGame extends FlameGame {
   final void Function(Map<String, dynamic>) onGameEnd;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final int gridSize = 3; // 3x3
+  final int gridSize = 3;
   final int nBack = 2;
   final int totalStimuli = 20;
 
@@ -143,7 +190,7 @@ class NBackGame extends FlameGame {
   NBackGame({required this.onGameEnd});
 
   @override
-  Color backgroundColor() => const Color(0xFFF5F5F5); // Fondo blanco/gris claro
+  Color backgroundColor() => const Color(0xFFF5F5F5);
 
   @override
   Future<void> onLoad() async {
@@ -160,7 +207,7 @@ class NBackGame extends FlameGame {
   }
 
   void createGrid() {
-    const double squareSize = 80;
+    const double squareSize = 110;
     final double spacing = 8;
     final double totalWidth = gridSize * squareSize + (gridSize - 1) * spacing;
     final double totalHeight = gridSize * squareSize + (gridSize - 1) * spacing;
@@ -202,7 +249,7 @@ class NBackGame extends FlameGame {
 
   void startTest() {
     prepareGame();
-    showNextStimulus(); // <<<< Lanzamos primer estímulo directamente
+    showNextStimulus();
     timer = async.Timer.periodic(const Duration(seconds: 2), (_) {
       showNextStimulus();
     });
@@ -218,18 +265,17 @@ class NBackGame extends FlameGame {
     int nextIndex;
     bool shouldForceMatch = false;
 
-if (forcedMatchPositions.contains(currentStimuli)) {
-  nextIndex = sequence[currentStimuli - nBack];
-  matchesCreated++;
-} else {
-  do {
-    nextIndex = random.nextInt(gridSize * gridSize);
-  } while (
-    (currentStimuli >= nBack && nextIndex == sequence[currentStimuli - nBack]) || 
-    (sequence.isNotEmpty && nextIndex == sequence.last)
-  );
-}
-
+    if (forcedMatchPositions.contains(currentStimuli)) {
+      nextIndex = sequence[currentStimuli - nBack];
+      matchesCreated++;
+    } else {
+      do {
+        nextIndex = random.nextInt(gridSize * gridSize);
+      } while (
+        (currentStimuli >= nBack && nextIndex == sequence[currentStimuli - nBack]) || 
+        (sequence.isNotEmpty && nextIndex == sequence.last)
+      );
+    }
 
     highlightedIndex = nextIndex;
     sequence.add(highlightedIndex);
@@ -285,8 +331,6 @@ if (forcedMatchPositions.contains(currentStimuli)) {
     });
   }
 }
-
-// ---- Componente de cada casilla ----
 
 class SquareComponent extends PositionComponent {
   bool highlighted = false;

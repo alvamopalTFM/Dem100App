@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +33,6 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
 
   bool juegoIniciado = false;
 
-  // Todas las categorías posibles
   final Map<String, List<String>> todasLasCategorias = {
     'Animales': ['Perro', 'Gato', 'León', 'Elefante', 'Tigre', 'Salmón', 'Paloma', 'Gorila'],
     'Frutas': ['Manzana', 'Plátano', 'Uva', 'Naranja', 'Fresa', 'Limón', 'Pera', 'Piña', 'Melón', 'Sandía'],
@@ -68,7 +66,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
       }
     }
 
-    setState(() {}); // Actualiza la UI tras la selección
+    setState(() {});
   }
 
   void _mostrarInstrucciones() {
@@ -182,43 +180,73 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categorización Rápida'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
+      backgroundColor: Colors.white,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
           child: categoriasSeleccionadas.isEmpty
               ? const CircularProgressIndicator()
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Tiempo restante
                     Text(
                       'Tiempo restante: $tiempoRestante s',
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1565C0),
+                      ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 40),
                     Text(
                       palabraActual,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0D47A1),
+                      ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 50),
                     Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
+                      spacing: 24,
+                      runSpacing: 24,
                       alignment: WrapAlignment.center,
                       children: categoriasSeleccionadas.map((categoria) {
                         return ElevatedButton(
                           onPressed: () => _seleccionarCategoria(categoria),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                            backgroundColor: const Color(0xFFBBDEFB),
+                            foregroundColor: const Color(0xFF0D47A1),
+                            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 6,
                           ),
-                          child: Text(categoria, style: const TextStyle(fontSize: 18)),
+                          child: Text(
+                            categoria,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 50),
                     Text(
                       'Aciertos: $aciertos    Errores: $errores',
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1565C0),
+                      ),
                     ),
                   ],
                 ),

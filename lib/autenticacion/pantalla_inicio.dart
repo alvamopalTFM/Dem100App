@@ -30,7 +30,7 @@ class PantallaInicio extends StatelessWidget {
   Widget _resultadoMLButton(BuildContext context) {
     return ElevatedButton(
       onPressed: () => verificarYMostrarResultado(context),
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
       child: const Text('Ver resultado cognitivo'),
     );
   }

@@ -1,7 +1,6 @@
 import 'dart:async' as async;
 import 'dart:collection';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -115,12 +114,12 @@ class _LaberintoPageState extends State<LaberintoPage> {
       rows = 9;
       cols = 9;
       minMovesRequired = 12;
-      fakePathsRequired = 2 + random.nextInt(2); // 2-3 caminos falsos
+      fakePathsRequired = 2 + random.nextInt(2);
     } else if (difficulty == 'hard') {
       rows = 13;
       cols = 13;
       minMovesRequired = 22;
-      fakePathsRequired = 4 + random.nextInt(3); // 4-6 caminos falsos
+      fakePathsRequired = 4 + random.nextInt(3);
     }
 
     difficultySelected = true;
@@ -357,6 +356,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
         children: [
           const SizedBox(height: 10),
           Expanded(
+            flex: 5,
             child: Container(
               color: difficultySelected && gameStarted ? Colors.transparent : Colors.white,
               child: difficultySelected && gameStarted
@@ -376,37 +376,80 @@ class _LaberintoPageState extends State<LaberintoPage> {
                     )
                   : const Center(
                       child: Text(
-                        'Esperando selección...',
+                        '',
                         style: TextStyle(fontSize: 20, color: Colors.black54),
                       ),
                     ),
             ),
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 20,
-            runSpacing: 20,
-            children: [
-              ElevatedButton(
-                onPressed: () => movePlayer(-1, 0),
-                child: const Icon(Icons.arrow_upward),
+          const SizedBox.shrink(),
+          // Botones en forma de rombo
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: SizedBox(
+                width: 230,
+                height: 230,
+                child: Stack(
+                  children: [
+                    // Arriba
+                    Positioned(
+                      top: 0,
+                      left: 75,
+                      child: ElevatedButton(
+                        onPressed: () => movePlayer(-1, 0),
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(24),
+                        ),
+                        child: const Icon(Icons.arrow_upward, size: 32),
+                      ),
+                    ),
+                    // Abajo
+                    Positioned(
+                      bottom: 0,
+                      left: 75,
+                      child: ElevatedButton(
+                        onPressed: () => movePlayer(1, 0),
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(24),
+                        ),
+                        child: const Icon(Icons.arrow_downward, size: 32),
+                      ),
+                    ),
+                    // Izquierda
+                    Positioned(
+                      left: 0,
+                      top: 75,
+                      child: ElevatedButton(
+                        onPressed: () => movePlayer(0, -1),
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(24),
+                        ),
+                        child: const Icon(Icons.arrow_back, size: 32),
+                      ),
+                    ),
+                    // Derecha
+                    Positioned(
+                      right: 0,
+                      top: 75,
+                      child: ElevatedButton(
+                        onPressed: () => movePlayer(0, 1),
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          padding: const EdgeInsets.all(24),
+                        ),
+                        child: const Icon(Icons.arrow_forward, size: 32),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              ElevatedButton(
-                onPressed: () => movePlayer(1, 0),
-                child: const Icon(Icons.arrow_downward),
-              ),
-              ElevatedButton(
-                onPressed: () => movePlayer(0, -1),
-                child: const Icon(Icons.arrow_back),
-              ),
-              ElevatedButton(
-                onPressed: () => movePlayer(0, 1),
-                child: const Icon(Icons.arrow_forward),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
         ],
       ),
     );

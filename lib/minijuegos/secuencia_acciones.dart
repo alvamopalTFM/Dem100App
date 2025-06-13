@@ -1,12 +1,10 @@
 import 'dart:async' as async;
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
-
 
 class SecuenciaAccionesPage extends StatefulWidget {
   const SecuenciaAccionesPage({Key? key}) : super(key: key);
@@ -107,7 +105,8 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
         content: Text(
           'Tu objetivo es:\n\n'
           '$objetivo\n\n'
-          'Toca las acciones en el orden correcto para lograrlo.\n'
+          'Toca las acciones disponibles en el orden correcto para lograrlo.\n'
+          'Si te equivocas, puedes pulsar en la accion seleccionada que quieras quitar y volverá a la zona de acciones disponibles.\n'
           '¡Cuidado! Hay acciones trampa.',
           style: const TextStyle(fontSize: 16),
         ),
@@ -170,7 +169,7 @@ void seleccionarAccion(String accion) {
           'objetivo': objetivo,
           'acciones_correctas': accionesCorrectas,
           'acciones_finales': accionesSeleccionadas,
-          'intentos': intentos - 1, // porque primer intento correcto cuenta como 0 fallos
+          'intentos': intentos - 1,
           'tiempo_segundos': stopwatch.elapsed.inSeconds,
           'timestamp': Timestamp.now(),
         });
@@ -201,28 +200,26 @@ void seleccionarAccion(String accion) {
       );
     } else {
       if (!mounted) return;
-showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (context) => AlertDialog(
-    title: const Text('¡Secuencia incorrecta!'),
-    content: const Text('Inténtalo de nuevo.'),
-    actions: [
-      TextButton(
-        onPressed: () {
-          setState(() {
-            // Mover las seleccionadas de nuevo a disponibles
-            accionesDisponibles.addAll(accionesSeleccionadas);
-            accionesSeleccionadas.clear();
-          });
-          Navigator.of(context).pop();
-        },
-        child: const Text('Intentarlo de nuevo'),
-      ),
-    ],
-  ),
-);
-
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('¡Secuencia incorrecta!'),
+          content: const Text('Inténtalo de nuevo.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  accionesDisponibles.addAll(accionesSeleccionadas);
+                  accionesSeleccionadas.clear();
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Intentarlo de nuevo'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -246,47 +243,45 @@ showDialog(
     );
   }
 
-Widget buildAccionSeleccionada(int index) {
-  String? accion = index < accionesSeleccionadas.length ? accionesSeleccionadas[index] : null;
+  Widget buildAccionSeleccionada(int index) {
+    String? accion = index < accionesSeleccionadas.length ? accionesSeleccionadas[index] : null;
 
-  return GestureDetector(
-    onTap: accion != null ? () => deseleccionarAccion(accion) : null,
-    child: Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: accion != null ? Colors.greenAccent.shade100 : Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black26),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${index + 1}º',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+    return GestureDetector(
+      onTap: accion != null ? () => deseleccionarAccion(accion) : null,
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: accion != null ? Colors.greenAccent.shade100 : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.black26),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${index + 1}º',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                accion ?? '---',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  accion ?? '---',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
-
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -305,16 +300,15 @@ Widget buildAccionSeleccionada(int index) {
                 ),
                 const SizedBox(height: 10),
                 const Text('Acciones seleccionadas:', style: TextStyle(fontSize: 16)),
-Expanded(
-  flex: 2,
-  child: GridView.count(
-    crossAxisCount: 3,
-    padding: const EdgeInsets.all(8),
-    childAspectRatio: 1.2,
-    children: List.generate(3, (index) => buildAccionSeleccionada(index)),
-  ),
-),
-
+                Expanded(
+                  flex: 2,
+                  child: GridView.count(
+                    crossAxisCount: 3,
+                    padding: const EdgeInsets.all(8),
+                    childAspectRatio: 1.2,
+                    children: List.generate(3, (index) => buildAccionSeleccionada(index)),
+                  ),
+                ),
                 const Divider(),
                 const Text('Acciones disponibles:', style: TextStyle(fontSize: 16)),
                 Expanded(
