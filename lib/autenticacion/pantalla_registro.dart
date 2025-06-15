@@ -17,27 +17,61 @@ class _PantallaRegistroState extends State<PantallaRegistro> {
   final TextEditingController _controllerPassword = TextEditingController();
 
   Future<void> signInWithEmailAndPassword() async {
+    final email = _controllerEmail.text.trim();
+    final password = _controllerPassword.text;
+
+    setState(() => errorMessage = '');
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => errorMessage = 'Por favor, complete todos los campos.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() => errorMessage = 'La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
     try {
       await Auth().signInWithEmailAndPassword(
-        email: _controllerEmail.text,
-        password: _controllerPassword.text,
+        email: email,
+        password: password,
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message;
+        errorMessage = 'El correo o la contraseña son incorrectos';
       });
     }
   }
 
   Future<void> createUserWithEmailAndPassword() async {
+    final email = _controllerEmail.text.trim();
+    final password = _controllerPassword.text;
+
+    setState(() => errorMessage = '');
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => errorMessage = 'Por favor, complete todos los campos.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() => errorMessage = 'La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
     try {
       await Auth().createUserWithEmailAndPassword(
-        email: _controllerEmail.text,
-        password: _controllerPassword.text,
+        email: email,
+        password: password,
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message;
+        if (e.code == 'email-already-in-use') {
+          errorMessage = 'El correo ya está en uso.';
+        } else {
+          errorMessage = 'Error al registrar usuario.';
+        }
       });
     }
   }
@@ -145,4 +179,3 @@ class _PantallaRegistroState extends State<PantallaRegistro> {
     );
   }
 }
-

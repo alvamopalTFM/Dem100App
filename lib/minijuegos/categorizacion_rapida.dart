@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 
-
 class CategorizacionRapidaPage extends StatefulWidget {
   const CategorizacionRapidaPage({Key? key}) : super(key: key);
 
@@ -32,6 +31,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
   final Random random = Random();
 
   bool juegoIniciado = false;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   final Map<String, List<String>> todasLasCategorias = {
     'Animales': ['Perro', 'Gato', 'León', 'Elefante', 'Tigre', 'Salmón', 'Paloma', 'Gorila'],
@@ -65,7 +65,6 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
         palabrasFiltradas[palabra] = categoria;
       }
     }
-
     setState(() {});
   }
 
@@ -112,7 +111,6 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
   void _siguientePalabra() {
     final palabrasKeys = palabrasFiltradas.keys.toList();
     String nuevaPalabra;
-
     do {
       nuevaPalabra = palabrasKeys[random.nextInt(palabrasKeys.length)];
     } while (nuevaPalabra == ultimaPalabraMostrada);
@@ -136,6 +134,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
   }
 
   void _finalizarJuego() async {
+    isLoading.value = true;
     final user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('categorizacion_rapida_tests').add({
@@ -148,6 +147,7 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
       });
       await lanzarEvaluacionML();
     }
+    isLoading.value = false;
 
     if (!mounted) return;
     showDialog(
@@ -185,74 +185,67 @@ class _CategorizacionRapidaPageState extends State<CategorizacionRapidaPage> {
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-          child: categoriasSeleccionadas.isEmpty
-              ? const CircularProgressIndicator()
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Tiempo restante
-                    Text(
-                      'Tiempo restante: $tiempoRestante s',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1565C0),
-                      ),
+      body: Stack(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: categoriasSeleccionadas.isEmpty
+                  ? const CircularProgressIndicator()
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Tiempo restante: $tiempoRestante s', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF1565C0))),
+                        const SizedBox(height: 40),
+                        Text(palabraActual, textAlign: TextAlign.center, style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1))),
+                        const SizedBox(height: 50),
+                        Wrap(
+                          spacing: 24,
+                          runSpacing: 24,
+                          alignment: WrapAlignment.center,
+                          children: categoriasSeleccionadas.map((categoria) {
+                            return ElevatedButton(
+                              onPressed: () => _seleccionarCategoria(categoria),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFBBDEFB),
+                                foregroundColor: const Color(0xFF0D47A1),
+                                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 20),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                elevation: 6,
+                              ),
+                              child: Text(categoria, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 50),
+                        Text('Aciertos: $aciertos    Errores: $errores', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Color(0xFF1565C0))),
+                      ],
                     ),
-                    const SizedBox(height: 40),
-                    Text(
-                      palabraActual,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D47A1),
-                      ),
-                    ),
-                    const SizedBox(height: 50),
-                    Wrap(
-                      spacing: 24,
-                      runSpacing: 24,
-                      alignment: WrapAlignment.center,
-                      children: categoriasSeleccionadas.map((categoria) {
-                        return ElevatedButton(
-                          onPressed: () => _seleccionarCategoria(categoria),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFBBDEFB),
-                            foregroundColor: const Color(0xFF0D47A1),
-                            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 20),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 6,
-                          ),
-                          child: Text(
-                            categoria,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 50),
-                    Text(
-                      'Aciertos: $aciertos    Errores: $errores',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1565C0),
-                      ),
-                    ),
-                  ],
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, _) {
+              if (!loading) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Guardando resultados...', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    ],
+                  ),
                 ),
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
+
 

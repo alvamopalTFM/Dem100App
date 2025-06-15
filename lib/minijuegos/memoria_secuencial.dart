@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+final List<AudioPlayer> activePlayers = [];
 
 class MemoriaSecuencialPage extends StatefulWidget {
   const MemoriaSecuencialPage({Key? key}) : super(key: key);
@@ -20,29 +21,34 @@ class MemoriaSecuencialPage extends StatefulWidget {
 
 class _MemoriaSecuencialPageState extends State<MemoriaSecuencialPage> {
   late MemoriaSecuencialGame _game;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
-    _game = MemoriaSecuencialGame(onGameEnd: (nivelAlcanzado) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          title: const Text('¡Fin del juego!'),
-          content: Text('Nivel alcanzado: $nivelAlcanzado'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Salir'),
-            ),
-          ],
-        ),
-      );
-    });
+    _game = MemoriaSecuencialGame(
+      onGameEnd: (nivelAlcanzado) {
+        isLoading.value = false;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: const Text('¡Fin del juego!'),
+            content: Text('Nivel alcanzado: $nivelAlcanzado'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Salir'),
+              ),
+            ],
+          ),
+        );
+      },
+      isLoadingNotifier: isLoading,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _mostrarInstrucciones();
@@ -80,13 +86,46 @@ class _MemoriaSecuencialPageState extends State<MemoriaSecuencialPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: const Text('Memoria Secuencial')),
-      body: GameWidget(game: _game),
+      body: Stack(
+        children: [
+          GameWidget(game: _game),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, _) {
+              if (!loading) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        "Guardando resultados...",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _game.onExit();
+    super.dispose();
   }
 }
 
 class MemoriaSecuencialGame extends FlameGame with TapDetector {
   final Function(int) onGameEnd;
+  final ValueNotifier<bool>? isLoadingNotifier;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -108,10 +147,11 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   bool mostrandoSecuencia = false;
   bool puedeResponder = false;
   bool nuevosColoresAgregados = false;
+  bool isDisposed = false;
 
   late TextComponent estadoTexto;
 
-  MemoriaSecuencialGame({required this.onGameEnd});
+  MemoriaSecuencialGame({required this.onGameEnd, this.isLoadingNotifier});
 
   @override
   Future<void> onLoad() async {
@@ -213,14 +253,22 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   Future<void> _mostrarSecuencia() async {
     await Future.delayed(const Duration(milliseconds: 500));
     for (var index in secuencia) {
+      if (isDisposed) return;
       if (index >= botones.length) continue;
+
       await Future.delayed(const Duration(milliseconds: 300));
+      if (isDisposed) return;
+
       botones[index].startPulse();
+
       await Future.delayed(const Duration(milliseconds: 600));
+      if (isDisposed) return;
     }
-    mostrandoSecuencia = false;
-    puedeResponder = true;
-    estadoTexto.text = 'Repite la secuencia';
+    if (!isDisposed) {
+      mostrandoSecuencia = false;
+      puedeResponder = true;
+      estadoTexto.text = 'Repite la secuencia';
+    }
   }
 
   void _seleccionarColor(int index) {
@@ -243,6 +291,8 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   }
 
   Future<void> _guardarResultado() async {
+    isLoadingNotifier?.value = true;
+
     final User? user = _auth.currentUser;
 
     if (user != null) {
@@ -254,6 +304,8 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
       });
       await lanzarEvaluacionML();
     }
+
+    isLoadingNotifier?.value = false;
   }
 
   void _mostrarMensajeNuevosColores() {
@@ -282,10 +334,21 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
       ),
     );
   }
+
+  void onExit() {
+    isDisposed = true;
+    for (var boton in botones) {
+      boton.stopSound();
+    }
+    for (var player in List<AudioPlayer>.from(activePlayers)) {
+      player.stop();
+      player.dispose();
+    }
+    activePlayers.clear();
+  }
 }
 
 class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<MemoriaSecuencialGame> {
-  static final AudioPlayer _audioPlayer = AudioPlayer();
   static final Map<int, String> _notas = {
     0: 'Do.wav',
     1: 'Re.wav',
@@ -302,6 +365,7 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
 
   bool _isPulsing = false;
   double _pulseTime = 0;
+  AudioPlayer? _audioPlayer;
 
   ColorButton({
     required this.index,
@@ -324,8 +388,17 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
   Future<void> _reproducirNota() async {
     final nombreNota = _notas[index];
     if (nombreNota != null) {
-      await _audioPlayer.play(AssetSource('sonidos/$nombreNota'));
+      _audioPlayer = AudioPlayer();
+      activePlayers.add(_audioPlayer!);
+      await _audioPlayer!.play(AssetSource('sonidos/$nombreNota'));
     }
+  }
+
+  void stopSound() {
+    _audioPlayer?.stop();
+    _audioPlayer?.dispose();
+    activePlayers.remove(_audioPlayer);
+    _audioPlayer = null;
   }
 
   @override
@@ -365,3 +438,6 @@ class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<Memori
     onPressed(index);
   }
 }
+
+
+

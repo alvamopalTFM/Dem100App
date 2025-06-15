@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 
-
 class TestNBackPage extends StatefulWidget {
   const TestNBackPage({Key? key}) : super(key: key);
 
@@ -18,33 +17,38 @@ class TestNBackPage extends StatefulWidget {
 
 class _TestNBackPageState extends State<TestNBackPage> {
   late NBackGame _game;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
-    _game = NBackGame(onGameEnd: (result) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text('¡Test Finalizado!'),
+    _game = NBackGame(
+      onGameEnd: (result) {
+        isLoading.value = false;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('¡Test Finalizado!'),
           content: Text(
             'Aciertos: ${result['correctAnswers']}\n'
             'Fallos: ${result['mistakes']}\n'
             'Coincidencias posibles: ${result['matchesPlanned']}',
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    });
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      },
+      isLoadingNotifier: isLoading,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showInstructions();
@@ -119,8 +123,6 @@ class _TestNBackPageState extends State<TestNBackPage> {
     );
   }
 
-
-
   void handleResponse() {
     setState(() {
       _game.checkResponse();
@@ -133,28 +135,54 @@ class _TestNBackPageState extends State<TestNBackPage> {
       appBar: AppBar(
         title: const Text('Test de N-Back (Flame)'),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 10),
-          Text(
-            'Aciertos: ${_game.correctAnswers}    Fallos: ${_game.mistakes}',
-            style: const TextStyle(fontSize: 20),
+          Column(
+            children: [
+              const SizedBox(height: 10),
+              Text(
+                'Aciertos: ${_game.correctAnswers}    Fallos: ${_game.mistakes}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Expanded(
+                child: GameWidget(game: _game),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 144, 205, 255),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  textStyle: const TextStyle(fontSize: 24),
+                ),
+                onPressed: handleResponse,
+                child: const Text('¡Es igual!'),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
-          Expanded(
-            child: GameWidget(game: _game),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, _) {
+              if (!loading) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        "Guardando resultados...",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:  const Color.fromARGB(255, 144, 205, 255),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-              textStyle: const TextStyle(fontSize: 24),
-            ),
-            onPressed: handleResponse,
-            child: const Text('¡Es igual!'),
-          ),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -163,6 +191,7 @@ class _TestNBackPageState extends State<TestNBackPage> {
 
 class NBackGame extends FlameGame {
   final void Function(Map<String, dynamic>) onGameEnd;
+  final ValueNotifier<bool>? isLoadingNotifier;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -187,7 +216,7 @@ class NBackGame extends FlameGame {
 
   final List<SquareComponent> squares = [];
 
-  NBackGame({required this.onGameEnd});
+  NBackGame({required this.onGameEnd, this.isLoadingNotifier});
 
   @override
   Color backgroundColor() => const Color(0xFFF5F5F5);
@@ -236,7 +265,6 @@ class NBackGame extends FlameGame {
     int maxMatches = (totalStimuli * 0.4).round();
     matchesPlanned = random.nextInt(maxMatches - minMatches + 1) + minMatches;
 
-    // Elegimos posiciones válidas (a partir de nBack) donde obligaremos coincidencias
     List<int> possiblePositions = List.generate(
       totalStimuli - nBack,
       (i) => i + nBack,
@@ -245,7 +273,6 @@ class NBackGame extends FlameGame {
     possiblePositions.shuffle();
     forcedMatchPositions = possiblePositions.take(matchesPlanned).toSet();
   }
-
 
   void startTest() {
     prepareGame();
@@ -308,6 +335,8 @@ class NBackGame extends FlameGame {
   }
 
   Future<void> endGame() async {
+    isLoadingNotifier?.value = true;
+
     final User? user = _auth.currentUser;
 
     if (user != null) {
@@ -323,6 +352,8 @@ class NBackGame extends FlameGame {
       });
       await lanzarEvaluacionML();
     }
+
+    isLoadingNotifier?.value = false;
 
     onGameEnd({
       'correctAnswers': correctAnswers,
@@ -347,6 +378,7 @@ class SquareComponent extends PositionComponent {
     highlighted = value;
   }
 }
+
 
 
 

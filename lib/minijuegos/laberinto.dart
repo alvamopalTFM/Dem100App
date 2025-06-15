@@ -1,12 +1,11 @@
+// Código completo actualizado del Laberinto con overlay de carga
 import 'dart:async' as async;
 import 'dart:collection';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
-
 
 class LaberintoPage extends StatefulWidget {
   const LaberintoPage({Key? key}) : super(key: key);
@@ -31,6 +30,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
   final Random random = Random();
   bool gameStarted = false;
   bool difficultySelected = false;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   late int goalRow;
   late int goalCol;
@@ -81,24 +81,9 @@ class _LaberintoPageState extends State<LaberintoPage> {
         title: const Text('Selecciona la dificultad'),
         content: const Text('Elige el nivel de dificultad para el laberinto.'),
         actions: [
-          TextButton(
-            onPressed: () {
-              _setupLevel('easy');
-            },
-            child: const Text('Fácil'),
-          ),
-          TextButton(
-            onPressed: () {
-              _setupLevel('medium');
-            },
-            child: const Text('Medio'),
-          ),
-          TextButton(
-            onPressed: () {
-              _setupLevel('hard');
-            },
-            child: const Text('Difícil'),
-          ),
+          TextButton(onPressed: () => _setupLevel('easy'), child: const Text('Fácil')),
+          TextButton(onPressed: () => _setupLevel('medium'), child: const Text('Medio')),
+          TextButton(onPressed: () => _setupLevel('hard'), child: const Text('Difícil')),
         ],
       ),
     );
@@ -132,14 +117,11 @@ class _LaberintoPageState extends State<LaberintoPage> {
 
     while (!validMaze) {
       maze = List.generate(rows, (_) => List.generate(cols, (_) => 1));
-
       int startRow = random.nextInt(rows);
       int startCol = random.nextInt(cols);
       playerRow = startRow;
       playerCol = startCol;
-
       _carvePath(startRow, startCol);
-
       maze[playerRow][playerCol] = 2;
 
       List<Point<int>> emptyCells = [];
@@ -156,13 +138,9 @@ class _LaberintoPageState extends State<LaberintoPage> {
         goalRow = goal.x;
         goalCol = goal.y;
         maze[goalRow][goalCol] = 3;
-
         int pathLength = _shortestPathLength(playerRow, playerCol, goalRow, goalCol);
         if (pathLength >= minMovesRequired) {
-          validMaze = true;
-          if (fakePathsRequired > 0) {
-            validMaze = _generateFakePaths();
-          }
+          validMaze = _generateFakePaths();
         }
       }
     }
@@ -175,17 +153,10 @@ class _LaberintoPageState extends State<LaberintoPage> {
 
   void _carvePath(int row, int col) {
     maze[row][col] = 0;
-    List<Point<int>> directions = [
-      Point(0, 1),
-      Point(1, 0),
-      Point(0, -1),
-      Point(-1, 0)
-    ]..shuffle();
-
+    List<Point<int>> directions = [Point(0, 1), Point(1, 0), Point(0, -1), Point(-1, 0)]..shuffle();
     for (var dir in directions) {
       int newRow = row + dir.x * 2;
       int newCol = col + dir.y * 2;
-
       if (newRow > 0 && newRow < rows && newCol > 0 && newCol < cols && maze[newRow][newCol] == 1) {
         maze[row + dir.x][col + dir.y] = 0;
         _carvePath(newRow, newCol);
@@ -199,7 +170,6 @@ class _LaberintoPageState extends State<LaberintoPage> {
     while (created < fakePathsRequired && attempts < 100) {
       int r = random.nextInt(rows);
       int c = random.nextInt(cols);
-
       if (maze[r][c] == 0) {
         List<Point<int>> directions = [Point(0, 1), Point(1, 0), Point(0, -1), Point(-1, 0)]..shuffle();
         for (var dir in directions) {
@@ -222,21 +192,15 @@ class _LaberintoPageState extends State<LaberintoPage> {
     Queue<List<int>> queue = Queue();
     queue.add([startRow, startCol, 0]);
     visited[startRow][startCol] = true;
-
     while (queue.isNotEmpty) {
       var current = queue.removeFirst();
       int r = current[0];
       int c = current[1];
       int dist = current[2];
-
-      if (r == endRow && c == endCol) {
-        return dist;
-      }
-
+      if (r == endRow && c == endCol) return dist;
       for (var dir in [Point(0, 1), Point(1, 0), Point(0, -1), Point(-1, 0)]) {
         int nr = r + dir.x;
         int nc = c + dir.y;
-
         if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && maze[nr][nc] != 1) {
           visited[nr][nc] = true;
           queue.add([nr, nc, dist + 1]);
@@ -248,17 +212,13 @@ class _LaberintoPageState extends State<LaberintoPage> {
 
   void movePlayer(int dRow, int dCol) {
     if (!gameStarted) return;
-
     final newRow = playerRow + dRow;
     final newCol = playerCol + dCol;
-
     if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
       errors++;
       return;
     }
-
     final cell = maze[newRow][newCol];
-
     if (cell == 1) {
       errors++;
     } else {
@@ -267,7 +227,6 @@ class _LaberintoPageState extends State<LaberintoPage> {
         playerCol = newCol;
         moves++;
       });
-
       if (cell == 3) {
         _finishMaze();
       }
@@ -276,6 +235,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
 
   Future<void> _finishMaze() async {
     stopwatch.stop();
+    isLoading.value = true;
     final User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('laberinto_tests').add({
@@ -290,7 +250,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
       });
       await lanzarEvaluacionML();
     }
-
+    isLoading.value = false;
     if (mounted) {
       showDialog(
         context: context,
@@ -339,7 +299,6 @@ class _LaberintoPageState extends State<LaberintoPage> {
           color = Colors.white;
       }
     }
-
     return Container(
       margin: const EdgeInsets.all(2),
       color: color,
@@ -349,112 +308,114 @@ class _LaberintoPageState extends State<LaberintoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Laberinto'),
-      ),
-      body: Column(
+      appBar: AppBar(title: const Text('Laberinto')),
+      body: Stack(
         children: [
-          const SizedBox(height: 10),
-          Expanded(
-            flex: 5,
-            child: Container(
-              color: difficultySelected && gameStarted ? Colors.transparent : Colors.white,
-              child: difficultySelected && gameStarted
-                  ? AspectRatio(
-                      aspectRatio: 1,
-                      child: GridView.builder(
-                        itemCount: rows * cols,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: cols,
+          Column(
+            children: [
+              const SizedBox(height: 10),
+              Expanded(
+                flex: 5,
+                child: Container(
+                  color: difficultySelected && gameStarted ? Colors.transparent : Colors.white,
+                  child: difficultySelected && gameStarted
+                      ? AspectRatio(
+                          aspectRatio: 1,
+                          child: GridView.builder(
+                            itemCount: rows * cols,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols),
+                            itemBuilder: (context, index) {
+                              final row = index ~/ cols;
+                              final col = index % cols;
+                              return buildCell(row, col);
+                            },
+                          ),
+                        )
+                      : const Center(
+                          child: Text('', style: TextStyle(fontSize: 20, color: Colors.black54)),
                         ),
-                        itemBuilder: (context, index) {
-                          final row = index ~/ cols;
-                          final col = index % cols;
-                          return buildCell(row, col);
-                        },
-                      ),
-                    )
-                  : const Center(
-                      child: Text(
-                        '',
-                        style: TextStyle(fontSize: 20, color: Colors.black54),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox.shrink(),
-          // Botones en forma de rombo
-          Expanded(
-            flex: 3,
-            child: Center(
-              child: SizedBox(
-                width: 230,
-                height: 230,
-                child: Stack(
-                  children: [
-                    // Arriba
-                    Positioned(
-                      top: 0,
-                      left: 75,
-                      child: ElevatedButton(
-                        onPressed: () => movePlayer(-1, 0),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(24),
-                        ),
-                        child: const Icon(Icons.arrow_upward, size: 32),
-                      ),
-                    ),
-                    // Abajo
-                    Positioned(
-                      bottom: 0,
-                      left: 75,
-                      child: ElevatedButton(
-                        onPressed: () => movePlayer(1, 0),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(24),
-                        ),
-                        child: const Icon(Icons.arrow_downward, size: 32),
-                      ),
-                    ),
-                    // Izquierda
-                    Positioned(
-                      left: 0,
-                      top: 75,
-                      child: ElevatedButton(
-                        onPressed: () => movePlayer(0, -1),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(24),
-                        ),
-                        child: const Icon(Icons.arrow_back, size: 32),
-                      ),
-                    ),
-                    // Derecha
-                    Positioned(
-                      right: 0,
-                      top: 75,
-                      child: ElevatedButton(
-                        onPressed: () => movePlayer(0, 1),
-                        style: ElevatedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(24),
-                        ),
-                        child: const Icon(Icons.arrow_forward, size: 32),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
+              Expanded(
+                flex: 3,
+                child: Center(
+                  child: SizedBox(
+                    width: 230,
+                    height: 230,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 75,
+                          child: ElevatedButton(
+                            onPressed: () => movePlayer(-1, 0),
+                            style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                            child: const Icon(Icons.arrow_upward, size: 32),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          left: 75,
+                          child: ElevatedButton(
+                            onPressed: () => movePlayer(1, 0),
+                            style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                            child: const Icon(Icons.arrow_downward, size: 32),
+                          ),
+                        ),
+                        Positioned(
+                          left: 0,
+                          top: 75,
+                          child: ElevatedButton(
+                            onPressed: () => movePlayer(0, -1),
+                            style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                            child: const Icon(Icons.arrow_back, size: 32),
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 75,
+                          child: ElevatedButton(
+                            onPressed: () => movePlayer(0, 1),
+                            style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                            child: const Icon(Icons.arrow_forward, size: 32),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
-          const SizedBox(height: 10),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, _) {
+              if (!loading) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text(
+                        "Guardando resultados...",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 }
+
 
 
 

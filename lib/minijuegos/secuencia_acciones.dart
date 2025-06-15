@@ -26,6 +26,7 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
   int intentos = 0;
   bool instruccionesMostradas = false;
   late Stopwatch stopwatch;
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   final Random random = Random();
 
@@ -126,15 +127,14 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
     );
   }
 
-void seleccionarAccion(String accion) {
-  if (accionesSeleccionadas.length < 3) {
-    setState(() {
-      accionesDisponibles.remove(accion);
-      accionesSeleccionadas.add(accion);
-    });
+  void seleccionarAccion(String accion) {
+    if (accionesSeleccionadas.length < 3) {
+      setState(() {
+        accionesDisponibles.remove(accion);
+        accionesSeleccionadas.add(accion);
+      });
+    }
   }
-}
-
 
   void deseleccionarAccion(String accion) {
     setState(() {
@@ -146,7 +146,6 @@ void seleccionarAccion(String accion) {
 
   void comprobarSecuencia() async {
     intentos++;
-
     bool correcto = true;
     if (accionesSeleccionadas.length != accionesCorrectas.length) {
       correcto = false;
@@ -161,6 +160,7 @@ void seleccionarAccion(String accion) {
 
     if (correcto) {
       stopwatch.stop();
+      isLoading.value = true;
       final User? user = _auth.currentUser;
       if (user != null) {
         await _firestore.collection('secuencia_acciones_tests').add({
@@ -175,6 +175,7 @@ void seleccionarAccion(String accion) {
         });
         await lanzarEvaluacionML();
       }
+      isLoading.value = false;
 
       if (!mounted) return;
       showDialog(
@@ -245,7 +246,6 @@ void seleccionarAccion(String accion) {
 
   Widget buildAccionSeleccionada(int index) {
     String? accion = index < accionesSeleccionadas.length ? accionesSeleccionadas[index] : null;
-
     return GestureDetector(
       onTap: accion != null ? () => deseleccionarAccion(accion) : null,
       child: Container(
@@ -259,22 +259,11 @@ void seleccionarAccion(String accion) {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                '${index + 1}º',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              Text('${index + 1}º', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  accion ?? '---',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                child: Text(accion ?? '---', textAlign: TextAlign.center, style: const TextStyle(fontSize: 14)),
               ),
             ],
           ),
@@ -286,55 +275,68 @@ void seleccionarAccion(String accion) {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Secuencia de Acciones'),
+      appBar: AppBar(title: const Text('Secuencia de Acciones')),
+      body: Stack(
+        children: [
+          instruccionesMostradas
+              ? Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Text('Objetivo:\n$objetivo', textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    const Text('Acciones seleccionadas:', style: TextStyle(fontSize: 16)),
+                    Expanded(
+                      flex: 2,
+                      child: GridView.count(
+                        crossAxisCount: 3,
+                        padding: const EdgeInsets.all(8),
+                        childAspectRatio: 1.2,
+                        children: List.generate(3, (index) => buildAccionSeleccionada(index)),
+                      ),
+                    ),
+                    const Divider(),
+                    const Text('Acciones disponibles:', style: TextStyle(fontSize: 16)),
+                    Expanded(
+                      flex: 3,
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        padding: const EdgeInsets.all(8),
+                        childAspectRatio: 3,
+                        children: accionesDisponibles.map(buildAccionDisponible).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: accionesSeleccionadas.isNotEmpty ? comprobarSecuencia : null,
+                      child: const Text('Comprobar'),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                )
+              : const Center(child: Text('Cargando instrucciones...', style: TextStyle(fontSize: 18))),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, _) {
+              if (!loading) return const SizedBox.shrink();
+              return Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Guardando resultados...', style: TextStyle(color: Colors.white, fontSize: 18)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      body: instruccionesMostradas
-          ? Column(
-              children: [
-                const SizedBox(height: 10),
-                Text(
-                  'Objetivo:\n$objetivo',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                const Text('Acciones seleccionadas:', style: TextStyle(fontSize: 16)),
-                Expanded(
-                  flex: 2,
-                  child: GridView.count(
-                    crossAxisCount: 3,
-                    padding: const EdgeInsets.all(8),
-                    childAspectRatio: 1.2,
-                    children: List.generate(3, (index) => buildAccionSeleccionada(index)),
-                  ),
-                ),
-                const Divider(),
-                const Text('Acciones disponibles:', style: TextStyle(fontSize: 16)),
-                Expanded(
-                  flex: 3,
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    padding: const EdgeInsets.all(8),
-                    childAspectRatio: 3,
-                    children: accionesDisponibles.map(buildAccionDisponible).toList(),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: accionesSeleccionadas.isNotEmpty ? comprobarSecuencia : null,
-                  child: const Text('Comprobar'),
-                ),
-                const SizedBox(height: 10),
-              ],
-            )
-          : const Center(
-              child: Text(
-                'Cargando instrucciones...',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
     );
   }
 }
+
 

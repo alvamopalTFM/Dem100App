@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 
-
 class TestStroopPage extends StatefulWidget {
   const TestStroopPage({Key? key}) : super(key: key);
 
@@ -40,6 +39,7 @@ class _TestStroopPageState extends State<TestStroopPage> {
   final Random random = Random();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -101,6 +101,10 @@ class _TestStroopPageState extends State<TestStroopPage> {
   }
 
   Future<void> endGame() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final User? user = _auth.currentUser;
 
     if (user != null) {
@@ -111,10 +115,16 @@ class _TestStroopPageState extends State<TestStroopPage> {
         'mistakes': mistakes,
         'timestamp': Timestamp.now(),
       });
+
       await lanzarEvaluacionML();
     }
 
     if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -147,8 +157,8 @@ class _TestStroopPageState extends State<TestStroopPage> {
 
   Widget buildColorButton(String colorName) {
     return SizedBox(
-      width: 172, // Aumentado
-      height: 115, // Aumentado
+      width: 172,
+      height: 115,
       child: ElevatedButton(
         onPressed: () => handleAnswer(colorName),
         style: ElevatedButton.styleFrom(
@@ -173,39 +183,61 @@ class _TestStroopPageState extends State<TestStroopPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Test de Stroop'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Aciertos: $score    Fallos: $mistakes',
-              style: const TextStyle(fontSize: 20),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Aciertos: $score    Fallos: $mistakes',
+                  style: const TextStyle(fontSize: 20),
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  currentWord,
+                  style: TextStyle(
+                    fontSize: 40,
+                    color: currentColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                ...buildButtons(),
+              ],
             ),
-            const SizedBox(height: 30),
-            Text(
-              currentWord,
-              style: TextStyle(
-                fontSize: 40,
-                color: currentColor,
-                fontWeight: FontWeight.bold,
+          ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      "Guardando resultados...",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 30),
-            ...buildButtons(),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
+
+
 
 
 
