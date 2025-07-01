@@ -6,14 +6,13 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 final List<AudioPlayer> activePlayers = [];
 
 class MemoriaSecuencialPage extends StatefulWidget {
-  const MemoriaSecuencialPage({Key? key}) : super(key: key);
+  const MemoriaSecuencialPage({super.key});
 
   @override
   State<MemoriaSecuencialPage> createState() => _MemoriaSecuencialPageState();
@@ -94,6 +93,7 @@ class _MemoriaSecuencialPageState extends State<MemoriaSecuencialPage> {
             builder: (context, loading, _) {
               if (!loading) return const SizedBox.shrink();
               return Container(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.5),
                 child: const Center(
                   child: Column(
@@ -348,6 +348,7 @@ class MemoriaSecuencialGame extends FlameGame with TapDetector {
   }
 }
 
+// ignore: deprecated_member_use
 class ColorButton extends PositionComponent with TapCallbacks, HasGameRef<MemoriaSecuencialGame> {
   static final Map<int, String> _notas = {
     0: 'Do.wav',

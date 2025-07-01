@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dem100app/auth.dart';
 
 class PantallaRegistro extends StatefulWidget {
-  const PantallaRegistro({Key? key}) : super(key: key);
+  const PantallaRegistro({super.key});
 
   @override
   State<PantallaRegistro> createState() => _PantallaRegistroState();
@@ -37,7 +37,7 @@ class _PantallaRegistroState extends State<PantallaRegistro> {
         email: email,
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       setState(() {
         errorMessage = 'El correo o la contraseña son incorrectos';
       });

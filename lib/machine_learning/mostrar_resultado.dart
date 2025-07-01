@@ -42,6 +42,7 @@ Future<void> mostrarResultadoML(BuildContext context) async {
       }
 
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: Row(
@@ -62,6 +63,7 @@ Future<void> mostrarResultadoML(BuildContext context) async {
       );
     } else {
       showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('Sin análisis disponible'),

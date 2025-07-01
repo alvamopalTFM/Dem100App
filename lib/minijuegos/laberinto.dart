@@ -1,5 +1,4 @@
 // Código completo actualizado del Laberinto con overlay de carga
-import 'dart:async' as async;
 import 'dart:collection';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dem100app/machine_learning/api_ml.dart';
 
 class LaberintoPage extends StatefulWidget {
-  const LaberintoPage({Key? key}) : super(key: key);
+  const LaberintoPage({super.key});
 
   @override
   State<LaberintoPage> createState() => _LaberintoPageState();
@@ -261,7 +260,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
             'Movimientos: $moves\n'
             'Errores: $errors\n'
             'Tiempo: ${stopwatch.elapsed.inSeconds} segundos\n'
-            'Tamaño: ${rows}x${cols}',
+            'Tamaño: ${rows}x$cols',
           ),
           actions: [
             TextButton(
@@ -393,6 +392,7 @@ class _LaberintoPageState extends State<LaberintoPage> {
             builder: (context, loading, _) {
               if (!loading) return const SizedBox.shrink();
               return Container(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.5),
                 child: const Center(
                   child: Column(

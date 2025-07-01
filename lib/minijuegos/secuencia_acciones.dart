@@ -1,13 +1,11 @@
-import 'dart:async' as async;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 
 class SecuenciaAccionesPage extends StatefulWidget {
-  const SecuenciaAccionesPage({Key? key}) : super(key: key);
+  const SecuenciaAccionesPage({super.key});
 
   @override
   State<SecuenciaAccionesPage> createState() => _SecuenciaAccionesPageState();
@@ -319,6 +317,7 @@ class _SecuenciaAccionesPageState extends State<SecuenciaAccionesPage> {
             builder: (context, loading, _) {
               if (!loading) return const SizedBox.shrink();
               return Container(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.5),
                 child: const Center(
                   child: Column(

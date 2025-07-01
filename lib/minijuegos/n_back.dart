@@ -5,11 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:dem100app/machine_learning/api_ml.dart';
 
 class TestNBackPage extends StatefulWidget {
-  const TestNBackPage({Key? key}) : super(key: key);
+  const TestNBackPage({super.key});
 
   @override
   State<TestNBackPage> createState() => _TestNBackPageState();
@@ -133,7 +132,7 @@ class _TestNBackPageState extends State<TestNBackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Test de N-Back (Flame)'),
+        title: const Text('Test de N-Back'),
       ),
       body: Stack(
         children: [
@@ -166,6 +165,7 @@ class _TestNBackPageState extends State<TestNBackPage> {
             builder: (context, loading, _) {
               if (!loading) return const SizedBox.shrink();
               return Container(
+                // ignore: deprecated_member_use
                 color: Colors.black.withOpacity(0.5),
                 child: const Center(
                   child: Column(
@@ -227,8 +227,8 @@ class NBackGame extends FlameGame {
   }
 
   @override
-  void onGameResize(Vector2 canvasSize) {
-    super.onGameResize(canvasSize);
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
     if (!gridCreated) {
       createGrid();
       gridCreated = true;
@@ -290,7 +290,6 @@ class NBackGame extends FlameGame {
     }
 
     int nextIndex;
-    bool shouldForceMatch = false;
 
     if (forcedMatchPositions.contains(currentStimuli)) {
       nextIndex = sequence[currentStimuli - nBack];

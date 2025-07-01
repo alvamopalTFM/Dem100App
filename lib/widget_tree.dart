@@ -4,7 +4,7 @@ import 'package:dem100app/autenticacion/pantalla_registro.dart';
 import 'package:flutter/material.dart';
 
 class WidgetTree extends StatefulWidget{
-  const WidgetTree({Key? key}) : super(key: key);
+  const WidgetTree({super.key});
 
   @override
   State<WidgetTree> createState() => _WidgetTreeState();

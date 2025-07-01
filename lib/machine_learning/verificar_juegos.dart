@@ -35,9 +35,11 @@ Future<void> verificarYMostrarResultado(BuildContext context) async {
   }
 
   if (tieneMinimoDeTodo) {
+    // ignore: use_build_context_synchronously
     await mostrarResultadoML(context);
   } else {
     showDialog(
+      // ignore: use_build_context_synchronously
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Datos insuficientes'),

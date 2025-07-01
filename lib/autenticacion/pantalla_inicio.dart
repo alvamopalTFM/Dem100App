@@ -7,12 +7,11 @@ import 'package:dem100app/minijuegos/test_stroop.dart';
 import 'package:dem100app/minijuegos/n_back.dart';
 import 'package:dem100app/minijuegos/memoria_secuencial.dart';
 import 'package:dem100app/minijuegos/categorizacion_rapida.dart';
-import 'package:dem100app/machine_learning/mostrar_resultado.dart';
 import 'package:dem100app/machine_learning/verificar_juegos.dart';
 
 
 class PantallaInicio extends StatelessWidget {
-  PantallaInicio({Key? key}) : super(key: key);
+  PantallaInicio({super.key});
 
   final User? user = Auth().currentUser;
 
